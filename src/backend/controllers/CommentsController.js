@@ -1,6 +1,6 @@
-import { Response } from "miragejs";
-import { formatDate, requiresAuth } from "../utils/authUtils";
-import { v4 as uuid } from "uuid";
+import { Response } from 'miragejs';
+import { formatDate, requiresAuth } from '../utils/authUtils';
+import { v4 as uuid } from 'uuid';
 
 /**
  * All the routes related to post comments are present here.
@@ -41,7 +41,7 @@ export const addPostCommentHandler = function (schema, request) {
         {},
         {
           errors: [
-            "The username you entered is not Registered. Not Found error",
+            'The username you entered is not Registered. Not Found error',
           ],
         }
       );
@@ -53,14 +53,18 @@ export const addPostCommentHandler = function (schema, request) {
       _id: uuid(),
       ...commentData,
       username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarURL: user.avatarURL,
       votes: { upvotedBy: [], downvotedBy: [] },
       createdAt: formatDate(),
       updatedAt: formatDate(),
     };
     const post = schema.posts.findBy({ _id: postId }).attrs;
     post.comments.push(comment);
+
     this.db.posts.update({ _id: postId }, post);
-    return new Response(201, {}, { comments: post.comments });
+    return new Response(201, {}, { posts: this.db.posts });
   } catch (error) {
     return new Response(
       500,
@@ -86,7 +90,7 @@ export const editPostCommentHandler = function (schema, request) {
         {},
         {
           errors: [
-            "The username you entered is not Registered. Not Found error",
+            'The username you entered is not Registered. Not Found error',
           ],
         }
       );
@@ -110,7 +114,7 @@ export const editPostCommentHandler = function (schema, request) {
       updatedAt: formatDate(),
     };
     this.db.posts.update({ _id: postId }, post);
-    return new Response(201, {}, { comments: post.comments });
+    return new Response(201, {}, { posts: this.db.posts });
   } catch (error) {
     return new Response(
       500,
@@ -136,7 +140,7 @@ export const deletePostCommentHandler = function (schema, request) {
         {},
         {
           errors: [
-            "The username you entered is not Registered. Not Found error",
+            'The username you entered is not Registered. Not Found error',
           ],
         }
       );
@@ -160,7 +164,7 @@ export const deletePostCommentHandler = function (schema, request) {
       (comment) => comment._id !== commentId
     );
     this.db.posts.update({ _id: postId }, post);
-    return new Response(201, {}, { comments: post.comments });
+    return new Response(201, {}, { posts: this.db.posts });
   } catch (error) {
     return new Response(
       500,
@@ -186,7 +190,7 @@ export const upvotePostCommentHandler = function (schema, request) {
         {},
         {
           errors: [
-            "The username you entered is not Registered. Not Found error",
+            'The username you entered is not Registered. Not Found error',
           ],
         }
       );
@@ -205,13 +209,13 @@ export const upvotePostCommentHandler = function (schema, request) {
       return new Response(
         400,
         {},
-        { errors: ["Cannot upvote a post that is already upvoted. "] }
+        { errors: ['Cannot upvote a post that is already upvoted. '] }
       );
     }
     post.comments[commentIndex].votes.downvotedBy = post.comments[
       commentIndex
     ].votes.downvotedBy.filter((currUser) => currUser._id !== user._id);
-    comments[commentIndex].votes.upvotedBy.push(user);
+    post.comments[commentIndex].votes.upvotedBy.push(user);
     this.db.posts.update({ _id: postId }, { ...post, updatedAt: formatDate() });
     return new Response(201, {}, { comments: post.comments });
   } catch (error) {
@@ -239,7 +243,7 @@ export const downvotePostCommentHandler = function (schema, request) {
         {},
         {
           errors: [
-            "The username you entered is not Registered. Not Found error",
+            'The username you entered is not Registered. Not Found error',
           ],
         }
       );
@@ -258,15 +262,15 @@ export const downvotePostCommentHandler = function (schema, request) {
       return new Response(
         400,
         {},
-        { errors: ["Cannot downvote a post that is already downvoted. "] }
+        { errors: ['Cannot downvote a post that is already downvoted. '] }
       );
     }
     post.comments[commentIndex].votes.upvotedBy = post.comments[
       commentIndex
     ].votes.upvotedBy.filter((currUser) => currUser._id !== user._id);
-    comments[commentIndex].votes.downvotedBy.push(user);
+    post.comments[commentIndex].votes.downvotedBy.push(user);
     this.db.posts.update({ _id: postId }, { ...post, updatedAt: formatDate() });
-    return new Response(201, {}, {  comments: post.comments  });
+    return new Response(201, {}, { comments: post.comments });
   } catch (error) {
     return new Response(
       500,
